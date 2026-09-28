@@ -16,14 +16,15 @@ mapped_zip = os.path.join(BASE_DIR, "local_antigen_db", "parent_mapped_antigens.
 
 @st.cache_data(ttl=3600)
 def load_mapped_db(csv_path, zip_path):
-    if os.path.exists(csv_path):
-        return pd.read_csv(csv_path)
-    elif os.path.exists(zip_path):
+    if os.path.exists(zip_path):
         extract_dir = os.path.dirname(zip_path)
         with zipfile.ZipFile(zip_path, 'r') as z:
-            z.extractall(extract_dir)
+            z.extractall(extract_dir) 
         if os.path.exists(csv_path):
             return pd.read_csv(csv_path)
+    elif os.path.exists(csv_path):
+        return pd.read_csv(csv_path)
+        
     return pd.DataFrame()
 
 df_raw_full = load_mapped_db(mapped_csv, mapped_zip)
