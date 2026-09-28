@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from antigen_evaluator import run_cascading_pipeline
 
 st.set_page_config(page_title="Cascading Antigen Screening Pipeline", layout="wide")
-st.title("🧬 High-Throughput Cascading Antigen Screening System")
+st.title(" High-Throughput Cascading Antigen Screening System")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 mapped_csv = os.path.join(BASE_DIR, "local_antigen_db", "parent_mapped_antigens.csv")
@@ -16,23 +16,25 @@ mapped_zip = os.path.join(BASE_DIR, "local_antigen_db", "parent_mapped_antigens.
 
 @st.cache_data(ttl=3600)
 def load_mapped_db(csv_path, zip_path):
-    # 优先直接读取 CSV；若不存在则自动解压 ZIP
+    # If CSV exists, read directly; if only ZIP exists, extract and read
     if os.path.exists(csv_path):
         return pd.read_csv(csv_path)
     elif os.path.exists(zip_path):
+        extract_dir = os.path.dirname(zip_path)
         with zipfile.ZipFile(zip_path, 'r') as z:
-            z.extractall(os.path.dirname(zip_path))
-        return pd.read_csv(csv_path)
+            z.extractall(extract_dir)
+        if os.path.exists(csv_path):
+            return pd.read_csv(csv_path)
     return pd.DataFrame()
 
 df_raw_full = load_mapped_db(mapped_csv, mapped_zip)
 
 if len(df_raw_full) == 0:
-    st.error("❌ Warning: Database not found! Please ensure `parent_mapped_antigens.zip` exists.")
+    st.error(" Warning: Database not found! Please ensure `parent_mapped_antigens.zip` exists in `local_antigen_db`.")
 else:
-    st.toast(f"✅ Successfully loaded ALL {len(df_raw_full)} parent antigen entries.", icon="📦")
+    st.toast(f" Loaded {len(df_raw_full)} parent antigen records.", icon="📦")
 
-st.sidebar.header("🎛️ Cascading Filter Thresholds")
+st.sidebar.header(" Cascading Filter Thresholds")
 
 tax_option = st.sidebar.selectbox(
     "1. Taxonomy Filtering Strategy",
@@ -61,7 +63,8 @@ plotly_config = {
     'displayModeBar': True
 }
 
-st.subheader("🔻 Cascading Filtration Funnel Chart")
+# Funnel Chart
+st.subheader(" Cascading Filtration Funnel Chart")
 fig_funnel = go.Figure(go.Funnel(
     y = ['Taxonomy Filter', 'Length Cutoff', 'MW Range Cutoff', 'Stability Cutoff', 'Final Candidates'],
     x = [counts['Taxonomy'], counts['Length'], counts['MW'], counts['Stability'], counts['Final']],
@@ -71,11 +74,12 @@ fig_funnel = go.Figure(go.Funnel(
 fig_funnel.update_layout(margin=dict(l=20, r=20, t=20, b=20))
 st.plotly_chart(fig_funnel, use_container_width=True, config=plotly_config)
 
-st.subheader("📊 Candidate Antigen Distribution Scatter Plot")
+# Scatter Plot
+st.subheader(" Candidate Antigen Distribution Scatter Plot")
 total_final = len(df_final)
 
 if total_final == 0:
-    st.warning("⚠️ Thresholds are too strict! No candidate antigens matched the criteria.")
+    st.warning(" Thresholds are too strict! No candidate antigens matched the criteria.")
 else:
     top_display_limit = min(50, total_final) if total_final > 1 else total_final
     df_scatter_data = df_final.head(top_display_limit)
@@ -94,11 +98,12 @@ else:
     fig_scatter.update_layout(height=700, margin=dict(l=20, r=20, t=50, b=20))
     st.plotly_chart(fig_scatter, use_container_width=True, config=plotly_config)
 
-st.subheader("🏆 Ranked Candidate Antigens Leaderboard")
+# Leaderboard
+st.subheader(" Ranked Candidate Antigens Leaderboard")
 display_cols = ["Antigen_Name", "Organism", "Seq_Length", "MW_kDa", "Instability_Index", "Epitope_Density_%", "Composite_Score", "Antigen_ID"]
 st.dataframe(df_final[[c for c in display_cols if c in df_final.columns]], use_container_width=True)
 
-with st.expander("🔍 Detailed Data Inspection at Each Stage"):
+with st.expander(" Detailed Data Inspection at Each Stage"):
     t1, t2, t3, t4 = st.tabs(["Post Taxonomy", "Post Length", "Post MW", "Post Stability"])
     safe_cols = [c for c in display_cols if c in res['df1'].columns]
     t1.dataframe(res['df1'][safe_cols].head(100), use_container_width=True)
