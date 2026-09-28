@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import zipfile
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -11,19 +12,25 @@ st.title("🧬 High-Throughput Cascading Antigen Screening System")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 mapped_csv = os.path.join(BASE_DIR, "local_antigen_db", "parent_mapped_antigens.csv")
+mapped_zip = os.path.join(BASE_DIR, "local_antigen_db", "parent_mapped_antigens.zip")
 
-@st.cache_data(ttl=60)
-def load_mapped_db(csv_path):
+@st.cache_data(ttl=3600)
+def load_mapped_db(csv_path, zip_path):
+    # 优先直接读取 CSV；若不存在则自动解压 ZIP
     if os.path.exists(csv_path):
+        return pd.read_csv(csv_path)
+    elif os.path.exists(zip_path):
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            z.extractall(os.path.dirname(zip_path))
         return pd.read_csv(csv_path)
     return pd.DataFrame()
 
-df_raw_full = load_mapped_db(mapped_csv)
+df_raw_full = load_mapped_db(mapped_csv, mapped_zip)
 
 if len(df_raw_full) == 0:
-    st.error("❌ Warning: Database not found! Please ensure `parent_mapped_antigens.csv` exists.")
+    st.error("❌ Warning: Database not found! Please ensure `parent_mapped_antigens.zip` exists.")
 else:
-    st.toast(f"✅ Successfully loaded {len(df_raw_full)} parent antigen entries.", icon="📦")
+    st.toast(f"✅ Successfully loaded ALL {len(df_raw_full)} parent antigen entries.", icon="📦")
 
 st.sidebar.header("🎛️ Cascading Filter Thresholds")
 
