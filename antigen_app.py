@@ -109,10 +109,11 @@ st.subheader(" Ranked Candidate Antigens Leaderboard")
 display_cols = ["Antigen_Name", "Organism", "Seq_Length", "MW_kDa", "Instability_Index", "Epitope_Density_%", "Composite_Score", "Antigen_ID"]
 st.dataframe(df_final[[c for c in display_cols if c in df_final.columns]], use_container_width=True)
 
-with st.expander(" Detailed Data Inspection at Each Stage"):
+with st.expander(" Detailed Data Inspection at Each Stage (Preview Top 100)"):
     t1, t2, t3, t4 = st.tabs(["Post Taxonomy", "Post Length", "Post MW", "Post Stability"])
     safe_cols = [c for c in display_cols if c in res['df1'].columns]
-    t1.dataframe(res['df1'][safe_cols].head(100), use_container_width=True)
-    t2.dataframe(res['df2'][safe_cols].head(100), use_container_width=True)
-    t3.dataframe(res['df3'][safe_cols].head(100), use_container_width=True)
-    t4.dataframe(res['df4'][safe_cols].head(100), use_container_width=True)
+    
+    t1.dataframe(res['df1'][safe_cols], use_container_width=True)
+    t2.dataframe(res['df2'][safe_cols], use_container_width=True)
+    t3.dataframe(res['df3'][safe_cols], use_container_width=True)
+    t4.dataframe(res['df4'][safe_cols], use_container_width=True)
