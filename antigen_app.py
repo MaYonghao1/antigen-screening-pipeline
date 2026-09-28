@@ -19,11 +19,17 @@ def load_mapped_db(csv_path, zip_path):
     if os.path.exists(zip_path):
         extract_dir = os.path.dirname(zip_path)
         with zipfile.ZipFile(zip_path, 'r') as z:
-            z.extractall(extract_dir) 
-        if os.path.exists(csv_path):
-            return pd.read_csv(csv_path)
-    elif os.path.exists(csv_path):
-        return pd.read_csv(csv_path)
+            z.extractall(extract_dir)
+            
+    if os.path.exists(csv_path):
+        dtypes = {
+            'Seq_Length': 'int32',
+            'MW_kDa': 'float32',
+            'Instability_Index': 'float32',
+            'Epitope_Density_%': 'float32',
+            'Epitope_Count': 'int32'
+        }
+        return pd.read_csv(csv_path, dtype=dtypes)
         
     return pd.DataFrame()
 
